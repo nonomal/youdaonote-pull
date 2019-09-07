@@ -101,6 +101,9 @@ class YoudaoNoteSession(requests.Session):
                 id = fileEntry['id']
                 name = fileEntry['name']
                 if fileEntry['dir']:
+                    # 自定义文件夹 HexoBlog 替换存放位置
+                    if name == 'HexoBlog':
+                        name = 'HexoBlog/source/_posts'
                     subDir = os.path.join(localDir, name)
                     try:
                         os.lstat(subDir)
