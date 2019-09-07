@@ -27,6 +27,10 @@ class YoudaoNotePull:
             if isinstance(jsonObj, list):
                 for fileEntry in jsonObj:
                     name = fileEntry['tl']
+                    # 自定义文件夹 HexoBlog 替换存放位置
+                    if name == 'HexoBlog':
+                        name = 'HexoBlog/source/_posts'
+
                     ids = fileEntry['p'].split('/')
                     if len(ids) == 2:
                         dir = os.path.join(localDir, name)
@@ -36,10 +40,6 @@ class YoudaoNotePull:
                             os.mkdir(dir)
                         self.getFileRecursively(ids[1], dir)
                     else:
-                        # if name.find('.md') < 0:
-                        #     print('已过滤不是 md 格式的：' + name)
-                        #     continue
-
                         localPath = os.path.join(localDir, name)
                         if not os.path.exists(localPath):
                             self.getNote(dirId, localPath)
@@ -62,7 +62,8 @@ if __name__ == '__main__':
 
     startTime = int(time.time())
     if len(sys.argv) >= 3:
-        d = {'shareKey': sys.argv[1], 'dirId': sys.argv[2], 'localDir': os.getcwd() if len(sys.argv) == 3 else sys.argv[3]}
+        d = {'shareKey': sys.argv[1], 'dirId': sys.argv[2],
+             'localDir': os.getcwd() if len(sys.argv) == 3 else sys.argv[3]}
         with open('config', 'w') as fp:
             fp.write(str(d))
     else:
