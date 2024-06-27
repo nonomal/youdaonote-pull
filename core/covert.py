@@ -174,20 +174,23 @@ class JsonConvert(object):
         :return
             text(text): 文本内容
         """
-        text = ""
+        all_text = ""
         # 5 内容
         five_contents = content.get("5")
         # 判断是否是普通文本
         if five_contents:
             seven_contents = five_contents[0].get("7")
-            if seven_contents:
+            if not seven_contents:
+                return all_text
+            for seven_content in seven_contents:
                 # 8 文本
-                text = seven_contents[0].get("8")
+                text = seven_content.get("8")
                 # 9 文本属性
-                text_attrs = seven_contents[0].get("9")
+                text_attrs = seven_content.get("9")
                 if text and text_attrs:
                     text = self._convert_text_attribute(text, text_attrs)
-        return text
+                all_text += text
+        return all_text
 
     def _convert_text_attribute(self, text: str, text_attrs: list):
         """文本属性"""
@@ -267,12 +270,21 @@ class JsonConvert(object):
         code_block = ""
         for code in codes:
             text = self._get_common_text(code)
-            if text:
-                code_block += text + "\n"
+            code_block += text + "\n"
 
         return "```{language}\r\n{code_block}```".format(
             language=language, code_block=code_block
         )
+
+    def convert_la_func(self, content):
+        """高亮块"""
+        lines: list = content.get("5")
+        highlight_block = ""
+        for line in lines:
+            text = self._get_common_text(line)
+            highlight_block += text + "\n"
+
+        return "```\r\n{highlight_block}```".format(highlight_block=highlight_block)
 
     def convert_q_func(self, content):
         """引用"""
@@ -290,7 +302,8 @@ class JsonConvert(object):
         text = self._get_common_text(content=content)
         is_ordered = content.get("4").get("lt")
         if is_ordered == "unordered":
-            return "- {text}".format(text=text)
+            level = content.get("4").get("ll")
+            return "\t" * (level - 1) + "- {text}".format(text=text)
         elif is_ordered == "ordered":
             # 有序列表都设置为 1，有些 MD 编辑自动转为有序列表
             return "1. {text}".format(text=text)

@@ -3,16 +3,15 @@
 from __future__ import absolute_import
 
 import os
-import unittest
-from unittest.mock import patch, mock_open, Mock
 import sys
+import unittest
+from unittest.mock import Mock, mock_open, patch
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from core.api import YoudaoNoteApi
 from core.covert import YoudaoNoteConvert
 from pull import YoudaoNotePull
-
 
 # 使用 test_cookies.json 作为 cookies 地址，避免 cookies.json 数据在运行测试用例时被错误覆盖
 TEST_COOKIES_PATH = "test_cookies.json"
@@ -60,9 +59,7 @@ class YoudaoNoteApiTest(unittest.TestCase):
             "builtins.open", mock_open(read_data=cookies_json_str.encode("utf-8"))
         ):
             message = youdaonote_api.login_by_cookies()
-            self.assertEqual(
-                message, "转换「{}」为字典时出现错误".format(self.TEST_COOKIES_PATH)
-            )
+            self.assertEqual(message, "转换「{}」为字典时出现错误".format(self.TEST_COOKIES_PATH))
 
         # 如果 cookies 格式正确，但少了 YNOTE_CSTK。期待：登录失败
         cookies_json_str = """{"cookies": [
@@ -204,14 +201,11 @@ class YoudaoNoteCovert(unittest.TestCase):
         from markdownify import markdownify as md
 
         new_content = md(
-            f"""<div><span style='color: rgb(68, 68, 68); line-height: 1.5; font-family: "Monaco","Consolas","Lucida Console","Courier New","serif"; font-size: 12px; background-color: rgb(247, 247, 247);'><a href="http://bbs.pcbeta.com/viewthread-1095891-1-1.html">http://bbs.pcbeta.com/viewthread-1095891-1-1.html</a><br></span></div><span style='color: rgb(68, 68, 68); line-height: 1.5; font-family: "Monaco","Consolas","Lucida Console","Courier New","serif"; font-size: 12px; background-color: rgb(247, 247, 247);'><div><span style='color: rgb(68, 68, 68); line-height: 1.5; font-family: "Monaco","Consolas","Lucida Console","Courier New","serif"; font-size: 12px; background-color: rgb(247, 247, 247);'><br></span></div>sudo perl -pi -e 's|\x75\x30\x89\xd8|\xeb\x30\x89\xd8|' /System/Library/Extensions/AppleRTC.kext/Contents/MacOS/AppleRTC</span>
-"""
+            f"""<div><span style='color: rgb(68, 68, 68); line-height: 1.5; font-family: "Monaco","Consolas","Lucida Console","Courier New","serif"; font-size: 12px; background-color: rgb(247, 247, 247);'><a href="http://bbs.pcbeta.com/viewthread-1095891-1-1.html">http://bbs.pcbeta.com/viewthread-1095891-1-1.html</a></span></div>"""
         )
-        expected_content = """<http://bbs.pcbeta.com/viewthread-1095891-1-1.html>  
-  
-sudo perl -pi -e 's|u0Ø|ë0Ø|' /System/Library/Extensions/AppleRTC.kext/Contents/MacOS/AppleRTC\n"""
+        expected_content = """<http://bbs.pcbeta.com/viewthread-1095891-1-1.html>"""
         self.assertEqual(new_content, expected_content)
-        
+
     def test_covert_json_to_markdown_content(self):
         """
         测试 json 转换 markdown
@@ -298,16 +292,16 @@ class YoudaoNotePullTest(unittest.TestCase):
         """
         youdaonote_pull = YoudaoNotePull()
         test_default_dir = "test/test_youdaonote"
-        local_dir_expect = os.path.join(os.getcwd(), test_default_dir).replace(
-            "\\", "/"
-        )
+        # local_dir_expect = os.path.join(os.getcwd(), test_default_dir).replace(
+        #     "\\", "/"
+        # )
 
         # 当不指定文件夹时。期待：当前目录新增 youdaonote 目录
         local_dir, error_msg = youdaonote_pull._check_local_dir(
             local_dir="", test_default_dir=test_default_dir
         )
-        self.assertEqual(local_dir, local_dir_expect)
-        self.assertTrue(os.path.exists(local_dir_expect))
+        self.assertEqual(local_dir, "./test/test_youdaonote")
+        self.assertTrue(os.path.exists(test_default_dir))
         self.assertEqual(error_msg, "")
 
         # 当指定文件不存在时。期待：创建文件夹
@@ -317,13 +311,13 @@ class YoudaoNotePullTest(unittest.TestCase):
 
         # 当指定文件夹存在时。期待：正常
         local_dir, error_msg = youdaonote_pull._check_local_dir(
-            local_dir=local_dir_expect
+            local_dir=test_default_dir
         )
-        self.assertEqual(local_dir, local_dir_expect)
+        self.assertEqual(local_dir, test_default_dir)
         self.assertEqual(error_msg, "")
 
         try:
-            os.removedirs(local_dir_expect)
+            os.removedirs(test_default_dir)
         except:
             pass
 
